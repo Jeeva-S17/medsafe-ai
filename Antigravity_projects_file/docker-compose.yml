@@ -1,0 +1,17 @@
+services:
+  medisafe-ai:
+    build: .
+    container_name: medisafe_ai_app
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - HOST=0.0.0.0
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+      - FDA_API_KEY=${FDA_API_KEY:-}
+    volumes:
+      - medisafe_data:/app/data
+    restart: unless-stopped
+
+volumes:
+  medisafe_data:

@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MediSafe AI — Clinical Decision Support Dashboard</title>
+  <meta name="description" content="AI-Powered Disease Risk Classification & Medication Safety Decision Support Platform" />
+  <!-- Google Fonts: Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Chart.js for real-time frontend charts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body class="theme-dark">
+  <!-- Top Global Clinical Banner -->
+  <header class="top-banner">
+    <div class="banner-left">
+      <div class="badge-cds">
+        <i data-lucide="shield-alert"></i>
+        <span>CLINICAL DECISION SUPPORT PROTOTYPE</span>
+      </div>
+      <span class="banner-disclaimer">AI-generated decision support — professional verification required. Not an autonomous diagnosis or prescription authority.</span>
+    </div>
+    <div class="banner-right">
+      <!-- Active Patient Selector & Historical EHR Indicator -->
+      <div class="patient-pill" id="global-patient-pill">
+        <i data-lucide="user"></i>
+        <span id="global-patient-name">Patient: P0001 (Arthur Pendelton)</span>
+      </div>
+      <div class="ehr-badge" id="global-ehr-badge">
+        <i data-lucide="folder-check"></i>
+        <span id="global-ehr-text">PREVIOUS DATA: EHR VERIFIED</span>
+      </div>
+      <button class="btn-icon theme-toggle" id="theme-toggle-btn" title="Toggle Light/Dark Theme">
+        <i data-lucide="sun"></i>
+      </button>
+    </div>
+  </header>
+
+  <div class="app-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">
+          <i data-lucide="activity"></i>
+        </div>
+        <div class="brand-text">
+          <h1>MediSafe AI</h1>
+          <p>Clinical Decision Support</p>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <button class="nav-item active" data-page="page-dashboard" id="nav-dashboard">
+          <i data-lucide="layout-dashboard"></i>
+          <span>Dashboard</span>
+        </button>
+        <button class="nav-item" data-page="page-patient" id="nav-patient">
+          <i data-lucide="user-check"></i>
+          <span>Patient Intake</span>
+        </button>
+        <button class="nav-item" data-page="page-history" id="nav-history">
+          <i data-lucide="history"></i>
+          <span>Medical History & EHR</span>
+        </button>
+        <button class="nav-item nav-highlight" data-page="page-delivery" id="nav-delivery">
+          <i data-lucide="truck"></i>
+          <span>Medicine Delivery</span>
+          <span class="nav-badge-pill">NEW</span>
+        </button>
+        <button class="nav-item" data-page="page-prediction" id="nav-prediction">
+          <i data-lucide="git-commit"></i>
+          <span>Disease Prediction</span>
+        </button>
+        <button class="nav-item" data-page="page-xai" id="nav-xai">
+          <i data-lucide="cpu"></i>
+          <span>Explainable AI (SHAP)</span>
+        </button>
+        <button class="nav-item" data-page="page-prescription" id="nav-prescription">
+          <i data-lucide="file-text"></i>
+          <span>Prescription OCR</span>
+        </button>
+        <button class="nav-item" data-page="page-medication" id="nav-medication">
+          <i data-lucide="pill"></i>
+          <span>Medication Safety</span>
+        </button>
+        <button class="nav-item" data-page="page-fda" id="nav-fda">
+          <i data-lucide="database"></i>
+          <span>FDA Safety Data</span>
+        </button>
+        <button class="nav-item" data-page="page-crewai" id="nav-crewai">
+          <i data-lucide="bot"></i>
+          <span>CrewAI Multi-Agent</span>
+        </button>
+        <button class="nav-item" data-page="page-report" id="nav-report">
+          <i data-lucide="clipboard-check"></i>
+          <span>Final Safety Report</span>
+        </button>
+        <button class="nav-item" data-page="page-pdf" id="nav-pdf">
+          <i data-lucide="file-down"></i>
+          <span>Visuals & PDF Export</span>
+        </button>
+        <button class="nav-item" data-page="page-status" id="nav-status">
+          <i data-lucide="server"></i>
+          <span>System Status</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="status-summary-pill" id="sidebar-sys-status">
+          <span class="status-dot green"></span>
+          <span>Core Services Online</span>
+        </div>
+        <div class="version-tag">MediSafe v1.0.0 (Clinical CDS)</div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+
+      <!-- ================= PAGE 1: DASHBOARD ================= -->
+      <section class="page-view active" id="page-dashboard">
+        <div class="page-header">
+          <div>
+            <h2>Clinical Decision Support Dashboard</h2>
+            <p class="subtitle">AI-Powered Disease Risk Classification & Medication Safety Decision Support</p>
+          </div>
+          <div class="action-row">
+            <button class="btn btn-secondary" id="btn-quick-sync-vitals"><i data-lucide="refresh-cw"></i> Refresh Baseline</button>
+            <button class="btn btn-success" onclick="navigateTo('page-delivery')"><i data-lucide="truck"></i> Order Prescribed Meds</button>
+            <button class="btn btn-primary" id="btn-run-full-pipeline"><i data-lucide="play"></i> Run End-to-End CDS Pipeline</button>
+          </div>
+        </div>
+
+        <!-- Quick Clinical Case Presets -->
+        <div class="card mb-4" style="padding: 0.9rem 1.25rem; background: linear-gradient(90deg, rgba(13,148,136,0.15), rgba(2,132,199,0.1)); border-color: rgba(20,184,166,0.3);">
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; font-weight: 700; color: var(--teal-light);">
+              <i data-lucide="layers"></i>
+              <span>TEST VARIOUS DISEASE CASES:</span>
+            </div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;" id="preset-buttons-container">
+              <button class="btn btn-xs btn-outline preset-btn" data-pid="P0001"><i data-lucide="activity"></i> Diabetes (P0001)</button>
+              <button class="btn btn-xs btn-outline preset-btn" data-pid="P0004"><i data-lucide="gauge"></i> Hypertension (P0004)</button>
+              <button class="btn btn-xs btn-outline preset-btn" data-pid="P0003"><i data-lucide="heart"></i> Heart Disease (P0003)</button>
+              <button class="btn btn-xs btn-outline preset-btn" data-pid="P0002"><i data-lucide="wind"></i> Asthma (P0002)</button>
+              <button class="btn btn-xs btn-outline preset-btn" data-pid="P0005"><i data-lucide="alert-circle"></i> Kidney Disease (P0005)</button>
+              <button class="btn btn-xs btn-outline preset-btn" data-pid="P0006"><i data-lucide="check-circle"></i> Normal / Low Risk (P0006)</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top Stat Cards -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">Active Patient</span>
+              <i data-lucide="user" class="stat-icon teal"></i>
+            </div>
+            <div class="stat-value" id="dash-patient-id">P0001</div>
+            <div class="stat-meta" id="dash-patient-meta">Arthur Pendelton · 58y Male</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">Predicted Condition</span>
+              <i data-lucide="activity" class="stat-icon blue"></i>
+            </div>
+            <div class="stat-value highlight" id="dash-predicted-disease">Type 2 Diabetes</div>
+            <div class="stat-meta" id="dash-disease-conf">Model Probability: 74.2%</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">Clinical Safety Level</span>
+              <i data-lucide="alert-triangle" class="stat-icon amber"></i>
+            </div>
+            <div class="stat-value badge-level" id="dash-safety-level">HIGH</div>
+            <div class="stat-meta" id="dash-safety-meta">Verification Required</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">Medication Alerts</span>
+              <i data-lucide="shield-alert" class="stat-icon red"></i>
+            </div>
+            <div class="stat-value" id="dash-med-alerts">1 Interaction</div>
+            <div class="stat-meta" id="dash-allergy-status">Sulfa Cross-Check Flagged</div>
+          </div>
+        </div>
+
+        <!-- Patient Previous Clinical Records & Historical Vitals Strip -->
+        <div class="card mt-4">
+          <div class="card-header">
+            <div class="card-title-group">
+              <i data-lucide="history" style="color: var(--teal-light); width: 22px; height: 22px;"></i>
+              <div>
+                <h3>Patient Previous Clinical Records & Historical Vitals</h3>
+                <p class="subtitle" style="font-size: 0.8rem; margin: 0; color: var(--text-secondary);">Verified baseline extracted from patient previous clinical visits & lab diagnostics (Hardware-Free System)</p>
+              </div>
+            </div>
+            <div class="action-row" style="gap: 0.5rem;">
+              <button class="btn btn-sm btn-secondary" onclick="navigateTo('page-history')"><i data-lucide="calendar"></i> View Past Visits</button>
+              <button class="btn btn-sm btn-success" onclick="navigateTo('page-delivery')"><i data-lucide="truck"></i> Order Medicines</button>
+            </div>
+          </div>
+          <div class="vitals-cards-grid">
+            <div class="vital-tile">
+              <span class="vital-label"><i data-lucide="heart"></i> Resting Heart Rate</span>
+              <div class="vital-number"><span id="live-hr">84</span> <span class="vital-unit">bpm</span></div>
+              <span class="vital-status normal" id="live-hr-status">EHR Record Verified</span>
+            </div>
+            <div class="vital-tile">
+              <span class="vital-label"><i data-lucide="wind"></i> SpO₂ Oxygenation</span>
+              <div class="vital-number"><span id="live-spo2">98.2</span> <span class="vital-unit">%</span></div>
+              <span class="vital-status normal" id="live-spo2-status">Optimal Baseline</span>
+            </div>
+            <div class="vital-tile">
+              <span class="vital-label"><i data-lucide="thermometer"></i> Temperature</span>
+              <div class="vital-number"><span id="live-temp">36.8</span> <span class="vital-unit">°C</span></div>
+              <span class="vital-status normal" id="live-temp-status">Normothermic</span>
+            </div>
+            <div class="vital-tile">
+              <span class="vital-label"><i data-lucide="gauge"></i> Blood Pressure</span>
+              <div class="vital-number"><span id="live-bp">142 / 86</span> <span class="vital-unit">mmHg</span></div>
+              <span class="vital-status warning" id="live-bp-status">Stage 1 Elevated</span>
+            </div>
+          </div>
+          <div class="chart-container" style="height: 220px;">
+            <canvas id="liveVitalsChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Two Column Dashboard Grid -->
+        <div class="two-col-grid mt-4">
+          <!-- Probability Ranking -->
+          <div class="card">
+            <div class="card-header">
+              <h3><i data-lucide="bar-chart-2"></i> Disease Probabilities (Random Forest)</h3>
+              <span class="badge-outline">Calibrated Model Output</span>
+            </div>
+            <div id="dash-probabilities-container">
+              <!-- Dynamically populated bars -->
+            </div>
+            <div class="notice-box mt-3">
+              <i data-lucide="info"></i>
+              <span>Probabilities reflect algorithmic multi-class distribution across evaluated features. They do not constitute an autonomous diagnosis.</span>
+            </div>
+          </div>
+
+          <!-- Key Drivers & Safety Check -->
+          <div class="card">
+            <div class="card-header">
+              <h3><i data-lucide="shield-check"></i> Rapid Safety Evaluation</h3>
+              <span class="badge-outline">Clinical Synthesis</span>
+            </div>
+            <div class="checklist" id="dash-safety-checklist">
+              <div class="check-item"><i data-lucide="check-circle" class="icon-ok"></i> <span>Patient physiological baseline validated</span></div>
+              <div class="check-item"><i data-lucide="alert-circle" class="icon-warn"></i> <span>Elevated Fasting Glucose (168 mg/dL) & HbA1c (7.8%)</span></div>
+              <div class="check-item"><i data-lucide="alert-triangle" class="icon-alert"></i> <span>Medication interaction flagged: Lisinopril + Metformin sensitivity</span></div>
+              <div class="check-item"><i data-lucide="database" class="icon-info"></i> <span>OpenFDA adverse surveillance profiles cached</span></div>
+            </div>
+            <div class="card-footer-action mt-3">
+              <button class="btn btn-outline full-width" onclick="navigateTo('page-report')">
+                <span>View Complete Multi-Agent Safety Report</span>
+                <i data-lucide="arrow-right"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= PAGE 2: PATIENT DATA ================= -->
+      <section class="page-view" id="page-patient">
+        <div class="page-header">
+          <div>
+            <h2>Patient Intake & Medical Records</h2>
+            <p class="subtitle">Enter, validate, and manage baseline clinical parameters for decision-support modeling</p>
+          </div>
+          <div class="action-row">
+            <select class="input-select" id="patient-switcher">
+              <option value="P0001">P0001 — Arthur Pendelton (Type 2 Diabetes)</option>
+              <option value="P0004">P0004 — Samuel Sterling (Essential Hypertension)</option>
+              <option value="P0003">P0003 — Marcus Vance (Coronary Heart Disease)</option>
+              <option value="P0002">P0002 — Elena Rostova (Bronchial Asthma)</option>
+              <option value="P0005">P0005 — Catherine Wells (Chronic Kidney Disease)</option>
+              <option value="P0006">P0006 — David Chen (Low Risk / Healthy Baseline)</option>
+              <option value="NEW">+ Create New Patient</option>
+            </select>
+            <button class="btn btn-primary" id="btn-save-patient"><i data-lucide="save"></i> Save Patient Profile</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <form id="patient-form" class="form-grid">
+            <div class="form-group">
+              <label for="form-patient-id">Patient Identifier *</label>
+              <input type="text" id="form-patient-id" class="form-input" required value="P0001" />
+              <span class="field-hint">Unique alphanumeric ID (e.g. P0001)</span>
+            </div>
+
+            <div class="form-group">
+              <label for="form-name">Patient Full Name</label>
+              <input type="text" id="form-name" class="form-input" value="Arthur Pendelton" />
+            </div>
+
+            <div class="form-group">
+              <label for="form-age">Age (Years) *</label>
+              <input type="number" id="form-age" class="form-input" min="0" max="130" required value="58" />
+              <span class="field-hint">Valid range: 0 - 130</span>
+            </div>
+
+            <div class="form-group">
+              <label for="form-gender">Biological Gender *</label>
+              <select id="form-gender" class="form-input" required>
+                <option value="Male" selected>Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="form-bmi">BMI (kg/m²) *</label>
+              <input type="number" step="0.1" id="form-bmi" class="form-input" min="10" max="80" required value="29.4" />
+              <span class="field-hint">Must be positive (10 - 80)</span>
+            </div>
+
+            <div class="form-group">
+              <label for="form-glucose">Fasting Glucose (mg/dL) *</label>
+              <input type="number" step="0.1" id="form-glucose" class="form-input" min="20" max="600" required value="168.0" />
+              <span class="field-hint">Cannot be negative (20 - 600)</span>
+            </div>
+
+            <div class="form-group">
+              <label for="form-bp">Systolic BP (mmHg) *</label>
+              <input type="number" step="0.1" id="form-bp" class="form-input" min="40" max="260" required value="142.0" />
+              <span class="field-hint">Systolic blood pressure</span>
+            </div>
+
+            <div class="form-group">
+              <label for="form-cholesterol">Serum Cholesterol (mg/dL) *</label>
+              <input type="number" step="0.1" id="form-cholesterol" class="form-input" min="50" max="600" required value="235.0" />
+            </div>
+
+            <div class="form-group">
+              <label for="form-hr">Resting Heart Rate (bpm) *</label>
+              <input type="number" step="0.1" id="form-hr" class="form-input" min="30" max="240" required value="84.0" />
+              <span class="field-hint">Cannot be negative (30 - 240)</span>
+            </div>
+
+            <div class="form-group">
+              <label for="form-hba1c">HbA1c Glycated Hemoglobin (%) *</label>
+              <input type="number" step="0.1" id="form-hba1c" class="form-input" min="3.0" max="18.0" required value="7.8" />
+              <span class="field-hint">Diagnostic threshold ≥ 6.5%</span>
+            </div>
+
+            <div class="form-group">
+              <label for="form-smoking">Tobacco Smoking History *</label>
+              <select id="form-smoking" class="form-input" required>
+                <option value="1" selected>Yes (Active / Former)</option>
+                <option value="0">No (Non-smoker)</option>
+              </select>
+            </div>
+
+            <div class="form-group full-span">
+              <label for="form-symptoms">Reported Symptoms</label>
+              <textarea id="form-symptoms" class="form-textarea" rows="2">Frequent urination, excessive thirst, blurred vision, mild fatigue</textarea>
+            </div>
+
+            <div class="form-group full-span">
+              <label for="form-allergies">Documented Allergies</label>
+              <input type="text" id="form-allergies" class="form-input" value="Penicillin, Sulfa drugs" />
+              <span class="field-hint">Comma-separated drug/substance allergies</span>
+            </div>
+
+            <div class="form-group full-span">
+              <label for="form-conditions">Pre-existing Medical Conditions</label>
+              <input type="text" id="form-conditions" class="form-input" value="Type 2 Diabetes Mellitus, Mild Hypertension" />
+            </div>
+
+            <div class="form-group full-span">
+              <label for="form-medications">Currently Active Medications</label>
+              <input type="text" id="form-medications" class="form-input" value="Metformin 850mg, Lisinopril 10mg" />
+            </div>
+          </form>
+
+          <div id="patient-form-alert" class="alert-box hidden mt-3"></div>
+        </div>
+      </section>
+
+      <!-- ================= PAGE 3: PATIENT MEDICAL HISTORY & EHR ================= -->
+      <section class="page-view" id="page-history">
+        <div class="page-header">
+          <div>
+            <h2>Patient Previous Clinical Records & Longitudinal EHR</h2>
+            <p class="subtitle">Documented clinical encounter history, physician diagnostic notes, lab panels, and vitals progression</p>
+          </div>
+          <div class="action-row">
+            <button class="btn btn-secondary" id="btn-refresh-history"><i data-lucide="refresh-cw"></i> Refresh Records</button>
+            <button class="btn btn-primary" onclick="navigateTo('page-delivery')"><i data-lucide="truck"></i> Order Prescribed Medicines</button>
+          </div>
+        </div>
+
+        <div class="alert-box info-alert">
+          <i data-lucide="shield-check"></i>
+          <div>
+            <strong>Purely Previous Patient Data Driven (Hardware-Free Architecture):</strong> MediSafe AI operates exclusively on validated previous medical encounters, lab test history, and baseline physiological records. No wearable hardware, IoT sensors, or simulation devices are required.
+          </div>
+        </div>
+
+        <!-- History Overview Stat Banner -->
+        <div class="stats-grid mt-4">
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">Patient EHR File</span>
+              <i data-lucide="folder-check" class="stat-icon teal"></i>
+            </div>
+            <div class="stat-value" id="history-patient-id">P0001</div>
+            <div class="stat-meta" id="history-patient-name">Arthur Pendelton</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">Documented Visits</span>
+              <i data-lucide="calendar" class="stat-icon blue"></i>
+            </div>
+            <div class="stat-value highlight" id="history-visits-count">4 Encounters</div>
+            <div class="stat-meta">Past 12 Months Longitudinal Care</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">Primary Diagnosis</span>
+              <i data-lucide="activity" class="stat-icon amber"></i>
+            </div>
+            <div class="stat-value" id="history-primary-diagnosis">Type 2 Diabetes Mellitus</div>
+            <div class="stat-meta">Mild Hypertension Co-morbidity</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-header">
+              <span class="stat-title">Active Regimen</span>
+              <i data-lucide="pill" class="stat-icon red"></i>
+            </div>
+            <div class="stat-value" style="font-size: 1rem;" id="history-active-meds">Metformin + Lisinopril</div>
+            <div class="stat-meta">Screened for Delivery Refill</div>
+          </div>
+        </div>
+
+        <!-- Historical Lab & Vitals Trajectory Chart -->
+        <div class="card mt-4">
+          <div class="card-header">
+            <h3><i data-lucide="trending-up"></i> Patient Previous Clinical Trajectory Across Past Visits</h3>
+            <span class="badge-outline">Blood Pressure, Glucose & Resting HR Progression</span>
+          </div>
+          <div class="chart-container" style="height: 300px;">
+            <canvas id="patientHistoryTrajectoryChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Chronological Encounters Timeline -->
+        <div class="card mt-4">
+          <div class="card-header">
+            <h3><i data-lucide="clock"></i> Chronological Visit History & Physician Documentation</h3>
+            <span class="badge-pill" id="history-timeline-badge">4 Verified Clinical Records</span>
+          </div>
+          <div class="history-timeline" id="patient-history-timeline-container">
+            <!-- Dynamically populated from /api/patient/{id}/history -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= PAGE: MEDICINE & PHARMACY DELIVERY ================= -->
+      <section class="page-view" id="page-delivery">
+        <div class="page-header">
+          <div>
+            <h2>Prescribed Medicine Delivery & Nearby Pharmacies</h2>
+            <p class="subtitle">Order verified medications directly from nearby neighborhood medical stores with doorstep delivery tracking</p>
+          </div>
+          <div class="action-row">
+            <button class="btn btn-secondary" id="btn-refresh-pharmacy"><i data-lucide="refresh-cw"></i> Refresh Stock</button>
+            <button class="btn btn-primary" onclick="scrollToOrderSummary()"><i data-lucide="shopping-cart"></i> View Order (<span id="cart-item-count">0</span> items)</button>
+          </div>
+        </div>
+
+        <!-- Top Medicine Delivery Banner -->
+        <div class="delivery-hero-banner">
+          <div class="delivery-hero-title">
+            <div class="delivery-icon-box">
+              <i data-lucide="truck"></i>
+            </div>
+            <div>
+              <h3>Prescription Verified & Safety Checked For Delivery</h3>
+              <p>Medicines cross-referenced with active allergies (<span id="del-allergy-summary">Penicillin, Sulfa drugs</span>) and verified safe.</p>
+            </div>
+          </div>
+          <div class="delivery-safety-badge">
+            <i data-lucide="shield-check"></i>
+            <span>100% Verified Neighborhood Medical Stores</span>
+          </div>
+        </div>
+
+        <div class="two-col-grid">
+          <!-- Left Column: Medicines Showcase & Nearby Pharmacies -->
+          <div>
+            <!-- Prescribed Medications Showcase -->
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <h3><i data-lucide="pill"></i> Prescribed & Recommended Medications</h3>
+                  <p class="subtitle" style="font-size: 0.8rem; margin: 0; color: var(--text-secondary);">Tailored to patient previous records, diagnosis, and safety evaluation</p>
+                </div>
+                <span class="badge-outline">Select Items to Order</span>
+              </div>
+              <div class="med-items-grid" id="delivery-prescribed-meds-container">
+                <!-- Dynamically loaded from /api/pharmacy/medicines -->
+                <div class="text-center text-muted" style="padding: 1.5rem;">Loading patient prescriptions...</div>
+              </div>
+            </div>
+
+            <!-- Health Supplies & OTC Care -->
+            <div class="card mt-4">
+              <div class="card-header">
+                <div>
+                  <h3><i data-lucide="plus-circle"></i> Supportive OTC & Health Essentials</h3>
+                  <p class="subtitle" style="font-size: 0.8rem; margin: 0; color: var(--text-secondary);">Recommended diagnostic supplies and wellness essentials</p>
+                </div>
+                <span class="badge-pill">Add-on Essentials</span>
+              </div>
+              <div class="med-items-grid" id="delivery-otc-meds-container">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+
+            <!-- Nearby Medical Shops & Pharmacies -->
+            <div class="card mt-4">
+              <div class="card-header">
+                <div>
+                  <h3><i data-lucide="map-pin"></i> Select Nearby Medical Shop</h3>
+                  <p class="subtitle" style="font-size: 0.8rem; margin: 0; color: var(--text-secondary);">Verified pharmacies within 4 km offering express home delivery</p>
+                </div>
+                <span class="badge-outline">Live Fulfillment Network</span>
+              </div>
+              <div class="pharmacies-list" id="delivery-pharmacies-container">
+                <!-- Dynamically populated from /api/pharmacy/nearby -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: Checkout, Order Placement & Live Tracking -->
+          <div>
+            <!-- Order Checkout Card -->
+            <div class="card" id="card-delivery-checkout">
+              <div class="card-header">
+                <h3><i data-lucide="clipboard-check"></i> Delivery Details & Checkout</h3>
+                <span class="badge-pill" id="selected-pharmacy-pill">Apollo Pharmacy 24x7</span>
+              </div>
+
+              <div class="order-summary-box">
+                <h4 style="font-size: 0.9rem; margin-bottom: 0.75rem; color: #cbd5e1;">Order Items:</h4>
+                <div id="checkout-items-list" style="display: flex; flex-direction: column; gap: 0.4rem;">
+                  <div class="text-muted" style="font-size: 0.85rem; font-style: italic;">No medicines selected. Check medicines on the left to add.</div>
+                </div>
+
+                <div class="summary-row mt-3">
+                  <span>Subtotal</span>
+                  <span id="summary-subtotal" style="font-family: var(--font-mono); font-weight: 700;">₹0.00</span>
+                </div>
+                <div class="summary-row">
+                  <span>Delivery Fee</span>
+                  <span id="summary-delivery-fee" style="color: #34d399; font-weight: 700;">FREE (Orders &gt; ₹100)</span>
+                </div>
+                <div class="summary-row">
+                  <span>Safety Packaging & Handling</span>
+                  <span style="color: #34d399; font-weight: 700;">FREE</span>
+                </div>
+                <div class="summary-row total">
+                  <span>Total Amount Payable</span>
+                  <span class="total-amount" id="summary-total">₹0.00</span>
+                </div>
+              </div>
+
+              <!-- Delivery Address & Recipient Info Form -->
+              <form id="delivery-order-form" class="form-grid mt-4" onsubmit="event.preventDefault();">
+                <div class="form-group">
+                  <label for="order-recipient-name">Patient / Recipient Name *</label>
+                  <input type="text" id="order-recipient-name" class="form-input" required value="Arthur Pendelton" />
+                </div>
+
+                <div class="form-group">
+                  <label for="order-phone">Contact Phone *</label>
+                  <input type="tel" id="order-phone" class="form-input" required value="+91 98401 23456" />
+                </div>
+
+                <div class="form-group full-span">
+                  <label for="order-address">Delivery Address *</label>
+                  <textarea id="order-address" class="form-textarea" rows="2" required>Flat 4B, Emerald Heights, 2nd Cross, Anna Nagar West</textarea>
+                </div>
+
+                <div class="form-group">
+                  <label for="order-delivery-slot">Delivery Speed *</label>
+                  <select id="order-delivery-slot" class="form-input">
+                    <option value="express" selected>⚡ Instant Express (25 - 35 mins)</option>
+                    <option value="standard">Standard Delivery (Today Evening)</option>
+                    <option value="morning">Scheduled Tomorrow (8 AM - 10 AM)</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="order-payment-method">Payment Method *</label>
+                  <select id="order-payment-method" class="form-input">
+                    <option value="Cash on Delivery (COD)" selected>💵 Cash on Delivery (COD)</option>
+                    <option value="UPI (GPay / PhonePe / Paytm)">📱 UPI (GPay / PhonePe / Paytm)</option>
+                    <option value="Credit / Debit Card">💳 Credit / Debit Card</option>
+                    <option value="Health Insurance Direct Bill">🏥 Health Insurance Direct Bill</option>
+                  </select>
+                </div>
+
+                <div class="form-group full-span">
+                  <button type="button" class="btn btn-success full-width btn-lg" id="btn-place-medicine-order" style="padding: 0.85rem; font-size: 1rem; font-weight: 700;">
+                    <i data-lucide="truck"></i>
+                    <span>Order Medicines for Delivery</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Active Order Tracking Card -->
+            <div class="order-tracker-card hidden" id="order-tracker-card">
+              <div class="tracker-header">
+                <div>
+                  <h3 style="font-size: 1.1rem; color: #a7f3d0; margin-bottom: 0.2rem;"><i data-lucide="package-check"></i> Live Order Tracking</h3>
+                  <span class="subtitle" style="font-size: 0.8rem; color: #94a3b8;">Real-time fulfillment & delivery status</span>
+                </div>
+                <div class="tracker-id-badge" id="tracker-order-id">MED-261021-98F1</div>
+              </div>
+
+              <!-- Partner details -->
+              <div class="partner-card">
+                <div class="partner-left">
+                  <div class="partner-avatar"><i data-lucide="user-check"></i></div>
+                  <div>
+                    <div class="partner-name" id="tracker-partner-name">Karthik R. (Hero Electric EV)</div>
+                    <div class="partner-vehicle" id="tracker-pharmacy-name">Dispatched from Apollo Pharmacy 24x7</div>
+                  </div>
+                </div>
+                <div class="partner-phone" id="tracker-partner-phone">
+                  <i data-lucide="phone"></i>
+                  <span>+91 98401 55210</span>
+                </div>
+              </div>
+
+              <!-- 5-Stage Stepper -->
+              <div class="stepper-timeline" id="tracker-stepper">
+                <div class="step-item completed" id="step-1">
+                  <div class="step-icon-circle"><i data-lucide="check"></i></div>
+                  <div class="step-content">
+                    <div class="step-title">Order Received & Transmitted</div>
+                    <div class="step-time" id="step-1-time">Just now · Transmitted to nearby pharmacy</div>
+                  </div>
+                </div>
+
+                <div class="step-item active" id="step-2">
+                  <div class="step-icon-circle">2</div>
+                  <div class="step-content">
+                    <div class="step-title">Pharmacist Prescription Verification & Packing</div>
+                    <div class="step-time" id="step-2-time">In Progress · Safety & dosage verification</div>
+                  </div>
+                </div>
+
+                <div class="step-item" id="step-3">
+                  <div class="step-icon-circle">3</div>
+                  <div class="step-content">
+                    <div class="step-title">Delivery Partner Dispatched</div>
+                    <div class="step-time">Assigned electric vehicle delivery partner</div>
+                  </div>
+                </div>
+
+                <div class="step-item" id="step-4">
+                  <div class="step-icon-circle">4</div>
+                  <div class="step-content">
+                    <div class="step-title">Out for Doorstep Delivery</div>
+                    <div class="step-time">Live ETA: 18 - 25 minutes</div>
+                  </div>
+                </div>
+
+                <div class="step-item" id="step-5">
+                  <div class="step-icon-circle">5</div>
+                  <div class="step-content">
+                    <div class="step-title">Delivered to Patient</div>
+                    <div class="step-time">OTP verification at doorstep</div>
+                  </div>
+                </div>
+              </div>
+
+              <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem;">
+                <button class="btn btn-sm btn-outline" id="btn-advance-delivery-status" style="flex: 1;">
+                  <i data-lucide="play-circle"></i>
+                  <span>Advance Status (Simulate Delivery Demo)</span>
+                </button>
+                <button class="btn btn-sm btn-secondary" id="btn-print-delivery-invoice">
+                  <i data-lucide="printer"></i>
+                  <span>Print Invoice</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Recent Orders History Table -->
+            <div class="card mt-4">
+              <div class="card-header">
+                <h3><i data-lucide="history"></i> Patient Medicine Delivery History</h3>
+                <span class="badge-outline">All Past Orders</span>
+              </div>
+              <div class="table-container">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Order ID</th>
+                      <th>Pharmacy</th>
+                      <th>Items</th>
+                      <th>Total</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="delivery-history-table-body">
+                    <tr><td colspan="5" class="text-center text-muted">No delivery orders placed yet</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= PAGE 4: DISEASE PREDICTION ================= -->
+      <section class="page-view" id="page-prediction">
+        <div class="page-header">
+          <div>
+            <h2>Random Forest Disease Classification</h2>
+            <p class="subtitle">Multi-class classification evaluated strictly across the 10 verified clinical features</p>
+          </div>
+          <button class="btn btn-primary" id="btn-run-prediction"><i data-lucide="sparkles"></i> Evaluate Disease Model</button>
+        </div>
+
+        <div class="alert-box warning-alert">
+          <i data-lucide="alert-triangle"></i>
+          <div>
+            <strong>Important Clinical Model Rule:</strong> The Random Forest model evaluates strictly 10 features (Age, Gender, BMI, Glucose, BP, Cholesterol, Heart_Rate, HbA1c, Smoking, Symptoms). Sensor monitoring parameters (SpO₂, Temperature) are presented as monitoring data and are NOT silently added to the Random Forest model.
+          </div>
+        </div>
+
+        <div class="two-col-grid mt-4">
+          <!-- Primary Prediction Card -->
+          <div class="card">
+            <div class="card-header">
+              <h3>Disease Prediction Result</h3>
+              <span class="badge-outline">Random Forest</span>
+            </div>
+            <div class="prediction-hero-box">
+              <span class="hero-label">Predicted Condition</span>
+              <div class="hero-disease" id="pred-disease-title">Type 2 Diabetes Mellitus</div>
+              <div class="hero-confidence">
+                <span class="conf-pill">Model Probability: <strong id="pred-confidence-val">74.2%</strong></span>
+              </div>
+              <p class="hero-disclaimer">AI-generated decision support — professional verification required. Not a confirmed medical diagnosis.</p>
+            </div>
+
+            <h4 class="mt-4 mb-2">Key Physiological Risk Factors Flagged:</h4>
+            <ul class="risk-list" id="pred-risk-factors-list">
+              <!-- Dynamically populated -->
+            </ul>
+          </div>
+
+          <!-- Probabilities Ranking Table & Bar Chart -->
+          <div class="card">
+            <div class="card-header">
+              <h3>Calibrated Disease Probabilities</h3>
+              <span class="badge-outline">Normalized %</span>
+            </div>
+            <div class="probabilities-list" id="pred-probabilities-list">
+              <!-- Bars -->
+            </div>
+
+            <div class="table-container mt-4">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Condition / Differential</th>
+                    <th>Model Probability</th>
+                    <th>Relative Standing</th>
+                  </tr>
+                </thead>
+                <tbody id="pred-table-body">
+                  <!-- Rows -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= PAGE 5: EXPLAINABLE AI (SHAP) ================= -->
+      <section class="page-view" id="page-xai">
+        <div class="page-header">
+          <div>
+            <h2>Explainable AI (SHAP TreeExplainer)</h2>
+            <p class="subtitle">Feature attribution analysis revealing which physiological factors influenced the model decision</p>
+          </div>
+          <button class="btn btn-primary" id="btn-run-shap"><i data-lucide="refresh-cw"></i> Recalculate SHAP Values</button>
+        </div>
+
+        <div class="alert-box info-alert">
+          <i data-lucide="info"></i>
+          <div>
+            "These values indicate which input features contributed most to the model output. They do not establish medical causation."
+          </div>
+        </div>
+
+        <div class="card mt-4">
+          <div class="card-header">
+            <h3>Why did the model make this prediction?</h3>
+            <span class="badge-outline">TreeExplainer Waterfall</span>
+          </div>
+          <p class="xai-summary-text" id="xai-explanation-text">
+            Loading explainability matrix...
+          </p>
+
+          <div class="chart-container mt-3" style="height: 340px;">
+            <canvas id="shapWaterfallChart"></canvas>
+          </div>
+        </div>
+
+        <div class="card mt-4">
+          <div class="card-header">
+            <h3>Feature Importance Ranking Table</h3>
+            <span class="badge-outline">SHAP Attribution</span>
+          </div>
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Clinical Feature</th>
+                  <th>Patient Value</th>
+                  <th>SHAP Value</th>
+                  <th>Impact Direction</th>
+                  <th>Relative Contribution</th>
+                </tr>
+              </thead>
+              <tbody id="xai-table-body">
+                <!-- Dynamically generated rows -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= PAGE 6: PRESCRIPTION OCR ================= -->
+      <section class="page-view" id="page-prescription">
+        <div class="page-header">
+          <div>
+            <h2>Prescription OCR & Medicine Extraction</h2>
+            <p class="subtitle">Upload patient prescription (JPG, PNG, PDF) to extract medicine names, dosages, and regimens</p>
+          </div>
+        </div>
+
+        <div class="two-col-grid">
+          <!-- Upload Box -->
+          <div class="card">
+            <div class="card-header">
+              <h3><i data-lucide="upload-cloud"></i> Upload Prescription Document</h3>
+              <span class="badge-outline">JPG / PNG / PDF</span>
+            </div>
+            
+            <div class="dropzone" id="ocr-dropzone">
+              <i data-lucide="file-up" class="dropzone-icon"></i>
+              <p class="dropzone-text">Drag & drop prescription document here, or click to select</p>
+              <span class="dropzone-sub">Supports image formats (JPG, PNG) and PDF documents</span>
+              <input type="file" id="ocr-file-input" accept=".jpg,.jpeg,.png,.pdf" style="display:none;" />
+            </div>
+
+            <div id="ocr-file-preview" class="file-preview-strip hidden mt-3">
+              <i data-lucide="file"></i>
+              <span id="ocr-filename">prescription.png</span>
+              <button class="btn btn-sm btn-primary" id="btn-submit-ocr"><i data-lucide="sparkles"></i> Process OCR</button>
+            </div>
+
+            <div class="notice-box mt-3">
+              <i data-lucide="alert-circle"></i>
+              <span>OCR output is extracted raw text and must not be treated as verified prescription instructions. If confidence is low, manual verification is required.</span>
+            </div>
+          </div>
+
+          <!-- OCR Extracted Output -->
+          <div class="card">
+            <div class="card-header">
+              <h3>Extracted Prescription Data</h3>
+              <span class="badge-pill" id="ocr-confidence-badge">Awaiting Upload</span>
+            </div>
+
+            <div class="ocr-raw-box">
+              <label class="block-label">Raw Extracted OCR Text:</label>
+              <pre id="ocr-raw-text" class="raw-text-block">No prescription uploaded yet. Please upload a file to extract medication data.</pre>
+            </div>
+
+            <h4 class="mt-3 mb-2">Detected Medications:</h4>
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Medicine</th>
+                    <th>Strength</th>
+                    <th>Frequency</th>
+                    <th>Duration</th>
+                    <th>Confidence</th>
+                  </tr>
+                </thead>
+                <tbody id="ocr-meds-table-body">
+                  <tr><td colspan="5" class="text-center text-muted">No medicines detected</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= PAGE 7: MEDICATION SAFETY ================= -->
+      <section class="page-view" id="page-medication">
+        <div class="page-header">
+          <div>
+            <h2>Medication Safety & Drug Interaction Checking</h2>
+            <p class="subtitle">Comprehensive allergy cross-matching, drug-drug interaction matrix, and contraindication screening</p>
+          </div>
+          <button class="btn btn-primary" id="btn-check-medications"><i data-lucide="shield"></i> Run Medication Check</button>
+        </div>
+
+        <div class="alert-box warning-alert">
+          <i data-lucide="alert-triangle"></i>
+          <div>
+            <strong>Prescription Authority Disclaimer:</strong> MediSafe AI does not tell patients to start, stop, or change medications. All findings must be clinically verified by a qualified physician or clinical pharmacist.
+          </div>
+        </div>
+
+        <!-- Allergy Check Status -->
+        <div class="card mt-4">
+          <div class="card-header">
+            <h3><i data-lucide="shield-alert"></i> Allergy Reconciliation</h3>
+            <span class="badge-pill" id="med-allergy-status-badge">Checking...</span>
+          </div>
+          <div id="med-allergy-alerts-container">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <!-- Current vs Prescribed Medications -->
+        <div class="two-col-grid mt-4">
+          <div class="card">
+            <div class="card-header">
+              <h3>Current Active Regimen</h3>
+              <span class="badge-outline">Patient History</span>
+            </div>
+            <ul class="med-tag-list" id="med-current-list">
+              <!-- Current meds -->
+            </ul>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3>Prescription OCR Detected</h3>
+              <span class="badge-outline">Uploaded Record</span>
+            </div>
+            <ul class="med-tag-list" id="med-ocr-list">
+              <!-- OCR meds -->
+            </ul>
+          </div>
+        </div>
+
+        <!-- Drug Interactions Matrix Table -->
+        <div class="card mt-4">
+          <div class="card-header">
+            <h3><i data-lucide="git-merge"></i> Drug-Drug Interaction Screen</h3>
+            <span class="badge-outline">Pharmacological Matrix</span>
+          </div>
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Drug Pair</th>
+                  <th>Severity</th>
+                  <th>Potential Clinical Interaction</th>
+                  <th>Evidence Source</th>
+                  <th>Action Guidance</th>
+                  <th>Verification</th>
+                </tr>
+              </thead>
+              <tbody id="med-interactions-table-body">
+                <!-- Interaction rows -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= PAGE 8: FDA SAFETY DATA ================= -->
+      <section class="page-view" id="page-fda">
+        <div class="page-header">
+          <div>
+            <h2>OpenFDA Adverse Event Drug Safety Surveillance</h2>
+            <p class="subtitle">Direct pharmacovigilance surveillance queries against the OpenFDA FAERS adverse event database</p>
+          </div>
+          <div class="fda-search-bar">
+            <input type="text" id="fda-search-input" class="form-input" placeholder="Search medicine (e.g. Metformin, Lisinopril)..." value="Metformin" />
+            <button class="btn btn-primary" id="btn-fda-search"><i data-lucide="search"></i> Search OpenFDA</button>
+          </div>
+        </div>
+
+        <div class="alert-box info-alert">
+          <i data-lucide="info"></i>
+          <div>
+            "FDA adverse-event reports are reports of events and do not by themselves establish causality."
+          </div>
+        </div>
+
+        <div class="two-col-grid mt-4">
+          <!-- FDA Report Summary -->
+          <div class="card">
+            <div class="card-header">
+              <h3 id="fda-card-title">FDA Adverse Event Summary: Metformin</h3>
+              <a href="https://open.fda.gov/apis/drug/event/" target="_blank" class="btn btn-sm btn-outline" id="fda-source-btn">
+                <span>View OpenFDA Source</span>
+                <i data-lucide="external-link"></i>
+              </a>
+            </div>
+
+            <div class="stats-grid" style="grid-template-columns: repeat(2, 1fr);">
+              <div class="stat-card">
+                <div class="stat-title">Total FAERS Incident Filings</div>
+                <div class="stat-value highlight" id="fda-total-reports">42,150</div>
+                <div class="stat-meta">Mandatory & Voluntary Reports</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-title">Sample Safety Report IDs</div>
+                <div class="stat-value" style="font-size: 1rem; font-family: monospace;" id="fda-sample-ids">FAERS-1902481</div>
+                <div class="stat-meta">Verified FAERS Record Keys</div>
+              </div>
+            </div>
+
+            <h4 class="mt-4 mb-2">Seriousness Stratification:</h4>
+            <div class="seriousness-breakdown" id="fda-seriousness-box">
+              <!-- Dynamically populated counts -->
+            </div>
+          </div>
+
+          <!-- Top Reactions Chart -->
+          <div class="card">
+            <div class="card-header">
+              <h3>Reported Adverse Reactions</h3>
+              <span class="badge-outline">MedDRA Preferred Terms</span>
+            </div>
+            <div class="chart-container" style="height: 280px;">
+              <canvas id="fdaReactionsChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= PAGE 9: CREWAI MULTI-AGENT ================= -->
+      <section class="page-view" id="page-crewai">
+        <div class="page-header">
+          <div>
+            <h2>CrewAI Multi-Agent Clinical Evaluation</h2>
+            <p class="subtitle">Collaborative clinical reasoning executed by 5 specialized medical intelligence agents</p>
+          </div>
+          <button class="btn btn-primary" id="btn-run-crewai"><i data-lucide="cpu"></i> Run Multi-Agent Analysis</button>
+        </div>
+
+        <!-- 5 Agent Visual Grid -->
+        <div class="agents-grid mt-4">
+          <!-- Agent 1 -->
+          <div class="agent-card">
+            <div class="agent-header">
+              <div class="agent-avatar"><i data-lucide="activity"></i></div>
+              <div>
+                <h4>Disease Analysis Agent</h4>
+                <p>ML Prediction & Probability Interpretation</p>
+              </div>
+            </div>
+            <div class="agent-body" id="agent-disease-body">
+              Awaiting execution...
+            </div>
+          </div>
+
+          <!-- Agent 2 -->
+          <div class="agent-card">
+            <div class="agent-header">
+              <div class="agent-avatar"><i data-lucide="shield-alert"></i></div>
+              <div>
+                <h4>Medication Safety Agent</h4>
+                <p>Pharmacotherapy Reconciliation & Allergies</p>
+              </div>
+            </div>
+            <div class="agent-body" id="agent-med-body">
+              Awaiting execution...
+            </div>
+          </div>
+
+          <!-- Agent 3 -->
+          <div class="agent-card">
+            <div class="agent-header">
+              <div class="agent-avatar"><i data-lucide="database"></i></div>
+              <div>
+                <h4>FDA Evidence Agent</h4>
+                <p>OpenFDA FAERS Adverse Surveillance</p>
+              </div>
+            </div>
+            <div class="agent-body" id="agent-fda-body">
+              Awaiting execution...
+            </div>
+          </div>
+
+          <!-- Agent 4 -->
+          <div class="agent-card">
+            <div class="agent-header">
+              <div class="agent-avatar"><i data-lucide="alert-triangle"></i></div>
+              <div>
+                <h4>Risk Assessment Agent</h4>
+                <p>Stratification & Data Gap Identification</p>
+              </div>
+            </div>
+            <div class="agent-body" id="agent-risk-body">
+              Awaiting execution...
+            </div>
+          </div>
+
+          <!-- Agent 5 -->
+          <div class="agent-card full-span">
+            <div class="agent-header">
+              <div class="agent-avatar"><i data-lucide="clipboard-check"></i></div>
+              <div>
+                <h4>Report Agent</h4>
+                <p>Multi-Agent Consensus & Actionable Synthesis</p>
+              </div>
+            </div>
+            <div class="agent-body" id="agent-report-body">
+              Awaiting execution...
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= PAGE 10: FINAL SAFETY REPORT ================= -->
+      <section class="page-view" id="page-report">
+        <div class="page-header">
+          <div>
+            <h2>Final Clinical Safety Report</h2>
+            <p class="subtitle">Structured clinical synthesis by Gemini AI and Multi-Agent Reasoning Layer</p>
+          </div>
+          <div class="action-row">
+            <button class="btn btn-secondary" onclick="navigateTo('page-pdf')"><i data-lucide="printer"></i> Export PDF</button>
+            <button class="btn btn-primary" id="btn-generate-final-report"><i data-lucide="sparkles"></i> Synthesize Report</button>
+          </div>
+        </div>
+
+        <!-- Main Results Summary Dashboard Card (Section 11 Design) -->
+        <div class="final-safety-box">
+          <div class="final-box-header">
+            <div class="final-brand">
+              <i data-lucide="shield-check"></i>
+              <span>MEDISAFE AI CLINICAL DECISION SUPPORT</span>
+            </div>
+            <div class="final-patient-tag" id="rep-patient-tag">Patient: P0001</div>
+          </div>
+
+          <div class="final-grid-layout">
+            <div class="final-item">
+              <span class="final-label">Predicted Disease</span>
+              <div class="final-val" id="rep-predicted-disease">Type 2 Diabetes Mellitus</div>
+              <span class="final-sub" id="rep-model-prob">Model Probability: 74.2%</span>
+            </div>
+
+            <div class="final-item">
+              <span class="final-label">Assigned Safety Level</span>
+              <div class="final-val safety-urgent" id="rep-safety-level">HIGH</div>
+              <span class="final-sub">Tier 3 Clinical Attention</span>
+            </div>
+
+            <div class="final-item">
+              <span class="final-label">Key Risk Factors</span>
+              <ul class="final-bullet-list" id="rep-risk-bullets">
+                <li>Elevated Fasting Glucose (168 mg/dL)</li>
+                <li>Diabetic Range HbA1c (7.8%)</li>
+                <li>Stage 1 Systolic Hypertension</li>
+              </ul>
+            </div>
+
+            <div class="final-item">
+              <span class="final-label">Medication & Allergy Safety</span>
+              <div class="safety-indicator-line"><i data-lucide="check" class="icon-ok"></i> <span>Allergy profile available</span></div>
+              <div class="safety-indicator-line"><i data-lucide="alert-triangle" class="icon-alert"></i> <span>Interaction verification required</span></div>
+            </div>
+
+            <div class="final-item">
+              <span class="final-label">OpenFDA Evidence</span>
+              <div class="final-val-sub">Surveillance data verified</div>
+              <span class="final-sub">No causation established</span>
+            </div>
+
+            <div class="final-item">
+              <span class="final-label">Professional Verification</span>
+              <div class="final-val-sub text-danger">REQUIRED</div>
+              <span class="final-sub">Clinician sign-off mandatory</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Structured Clinical Report Body -->
+        <div class="card mt-4">
+          <div class="card-header">
+            <h3>Structured Decision Support Documentation</h3>
+            <span class="badge-outline">Gemini Reasoning Synthesis</span>
+          </div>
+          <div class="markdown-viewer" id="final-report-markdown">
+            <p>Click "Synthesize Report" to compile the clinical decision-support document.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= PAGE 11: VISUALS & PDF EXPORT ================= -->
+      <section class="page-view" id="page-pdf">
+        <div class="page-header">
+          <div>
+            <h2>Clinical Visualizations & PDF Report Export</h2>
+            <p class="subtitle">Server-rendered Matplotlib analytics and downloadable ReportLab clinical report</p>
+          </div>
+          <button class="btn btn-primary" id="btn-download-pdf"><i data-lucide="download"></i> Download PDF Report</button>
+        </div>
+
+        <div class="charts-gallery-grid mt-4">
+          <div class="card chart-preview-card">
+            <div class="card-header">
+              <h4>Disease Probabilities Chart</h4>
+              <a href="#" id="download-prob-png" class="link-action"><i data-lucide="download"></i> PNG</a>
+            </div>
+            <img id="img-chart-probabilities" class="chart-img" alt="Disease Probabilities" src="/static/placeholder-chart.png" />
+          </div>
+
+          <div class="card chart-preview-card">
+            <div class="card-header">
+              <h4>SHAP Feature Contribution Chart</h4>
+              <a href="#" id="download-shap-png" class="link-action"><i data-lucide="download"></i> PNG</a>
+            </div>
+            <img id="img-chart-shap" class="chart-img" alt="SHAP Feature Attribution" src="/static/placeholder-chart.png" />
+          </div>
+
+          <div class="card chart-preview-card full-span">
+            <div class="card-header">
+              <h4>Patient Longitudinal Vital Trends</h4>
+              <div class="btn-group">
+                <button class="btn btn-xs btn-secondary" onclick="updateTrendsInterval('1h')">1h</button>
+                <button class="btn btn-xs btn-secondary" onclick="updateTrendsInterval('6h')">6h</button>
+                <button class="btn btn-xs btn-secondary active" onclick="updateTrendsInterval('24h')">24h</button>
+                <button class="btn btn-xs btn-secondary" onclick="updateTrendsInterval('7d')">7d</button>
+              </div>
+            </div>
+            <img id="img-chart-trends" class="chart-img" alt="Patient Vital Trends" src="/static/placeholder-chart.png" />
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= PAGE 12: SYSTEM STATUS ================= -->
+      <section class="page-view" id="page-status">
+        <div class="page-header">
+          <div>
+            <h2>System Health & Subsystem Status</h2>
+            <p class="subtitle">Live verification status of backend models, external APIs, and services</p>
+          </div>
+          <button class="btn btn-secondary" id="btn-refresh-status"><i data-lucide="refresh-cw"></i> Refresh Status</button>
+        </div>
+
+        <!-- Gemini Explanation & API Key Configuration -->
+        <div class="card mt-4" style="border-color: rgba(20, 184, 166, 0.4); background: linear-gradient(135deg, rgba(17, 24, 39, 0.95), rgba(15, 23, 42, 0.9));">
+          <div class="card-header">
+            <h3><i data-lucide="sparkles"></i> Gemini AI Reasoning Layer Configuration</h3>
+            <span class="badge-pill vital-status normal" id="gemini-current-badge">Autonomous CDS Fallback Active</span>
+          </div>
+          <div style="font-size: 0.88rem; color: #cbd5e1; line-height: 1.6; margin-bottom: 1.25rem;">
+            <strong>Why does Gemini show "Fallback Active"?</strong><br/>
+            When a <code>GOOGLE_API_KEY</code> has not yet been set in your environment or <code>.env</code> file, MediSafe AI automatically utilizes its internal <strong>Deterministic Clinical Decision Support Reasoning Engine</strong>. This ensures that the system works <strong>100% reliably and completely offline</strong> without any external cloud failure or timeout.
+            <br/><br/>
+            If you want to connect directly to the Google Gemini 1.5 Flash Cloud LLM, simply paste your Google Gemini API key below and click <strong>Connect Gemini AI</strong>:
+          </div>
+
+          <div style="display: flex; gap: 0.75rem; max-width: 680px; flex-wrap: wrap;">
+            <input type="password" id="input-gemini-key" class="form-input" placeholder="Paste your Google API key (AIzaSy...)" style="flex: 1; min-width: 280px;" />
+            <button class="btn btn-primary" id="btn-save-gemini-key"><i data-lucide="check-circle"></i> Connect Gemini AI</button>
+          </div>
+          <div id="gemini-key-feedback" class="mt-2" style="font-size: 0.8rem;"></div>
+        </div>
+
+        <div class="status-grid mt-4" id="system-status-grid">
+          <!-- Status cards generated dynamically -->
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="/static/app.js"></script>
+  <script>
+    // Initialize Lucide icons on page load
+    lucide.createIcons();
+  </script>
+</body>
+</html>
